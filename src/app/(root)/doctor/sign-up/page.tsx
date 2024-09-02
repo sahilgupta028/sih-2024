@@ -13,13 +13,12 @@ interface DoctorSignupFormData {
   phone: string;
   department: string;
   experience: string;
-  clinicAddress: string;
+  hospitalAddress: string;
   consultationFee: string;
   availability: string;
   qualifications: string;
   bio: string;
   password: string;
-  place: string;
   latitude: string;
   longitude: string;
 }
@@ -33,13 +32,12 @@ const DoctorSignup: React.FC = () => {
     phone: '',
     department: '',
     experience: '',
-    clinicAddress: '',
+    hospitalAddress: '',
     consultationFee: '',
     availability: '',
     qualifications: '',
     bio: '',
     password: '',
-    place: '',
     latitude: '',
     longitude: ''
   });
@@ -78,7 +76,7 @@ const DoctorSignup: React.FC = () => {
     setFormData({ ...formData, department: selectedOption.value });
   };
 
-  const getCoordinates = async (address: string, place: string) => {
+  const getCoordinates = async (address: string) => {
     const options = {
       method: 'POST',
       url: 'https://google-api31.p.rapidapi.com/map',
@@ -89,7 +87,6 @@ const DoctorSignup: React.FC = () => {
       },
       data: {
         text: address,
-        place: place,
         street: '',
         city: '',
         country: '',
@@ -127,7 +124,7 @@ const DoctorSignup: React.FC = () => {
     setSuccess('');
 
     try {
-      const { latitude, longitude } = await getCoordinates(formData.clinicAddress, formData.place);
+      const { latitude, longitude } = await getCoordinates(formData.hospitalAddress);
       console.log(latitude);
       console.log(longitude);
       const updatedFormData = {
@@ -240,35 +237,23 @@ const DoctorSignup: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Years of Experience"
+                  placeholder="Experience"
                 />
               </div>
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Place</label>
+                <label className="block text-sm font-medium text-gray-700">Hospital Address</label>
                 <input
                   type="text"
-                  name="place"
-                  value={formData.place}
+                  name="hospitalAddress"
+                  value={formData.hospitalAddress}
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Place"
+                  placeholder="Hospital Address"
                 />
               </div>
             </div>
             <div className="flex flex-col md:flex-row md:space-x-4">
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Clinic Address</label>
-                <input
-                  type="text"
-                  name="clinicAddress"
-                  value={formData.clinicAddress}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Clinic Address"
-                />
-              </div>
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-700">Consultation Fee</label>
                 <input
@@ -281,41 +266,44 @@ const DoctorSignup: React.FC = () => {
                   placeholder="Consultation Fee"
                 />
               </div>
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700">Availability</label>
+                <input
+                  type="text"
+                  name="availability"
+                  value={formData.availability}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                  placeholder="Availability"
+                />
+              </div>
             </div>
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Availability</label>
-              <input
-                type="text"
-                name="availability"
-                value={formData.availability}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                placeholder="Availability (e.g., Mon-Fri, 9am-5pm)"
-              />
-            </div>
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Qualifications</label>
-              <input
-                type="text"
-                name="qualifications"
-                value={formData.qualifications}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                placeholder="Qualifications"
-              />
-            </div>
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Bio</label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                placeholder="Short Bio"
-              />
+            <div className="flex flex-col md:flex-row md:space-x-4">
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700">Qualifications</label>
+                <input
+                  type="text"
+                  name="qualifications"
+                  value={formData.qualifications}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                  placeholder="Qualifications"
+                />
+              </div>
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700">Bio</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                  placeholder="Bio"
+                  rows={4}
+                />
+              </div>
             </div>
             <div className="w-full">
               <label className="block text-sm font-medium text-gray-700">Password</label>
@@ -334,7 +322,7 @@ const DoctorSignup: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700"
+                  className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-3xl shadow-sm hover:bg-blue-700"
                 >
                   Sign Up
                 </Button>
