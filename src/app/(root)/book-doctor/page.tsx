@@ -2,7 +2,7 @@
 
 // components/AppointmentForm.tsx
 import { useCallback, useEffect, useState } from 'react';
-import { useForm, Controller, FieldError } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
@@ -10,8 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Patient } from '@/models/Patient';
 import { useToast } from '@/components/ui/use-toast';
-import { Doctor } from '@/models/Doctor';
-import { div } from '@tensorflow/tfjs';
+import Hospital from '@/models/Hospital';
 import { FormError } from '@/components/FormError';
 import { FormSuccess } from '@/components/FormSuccess';
 import CustomAppInput from '@/components/CustomAppInput';
@@ -33,34 +32,32 @@ const appointmentFormSchema = z.object({
   patientBodyImage: z.string().optional(),
   patientPrescriptionImage: z.string().optional(),
   patientDiseases: z.array(z.string()).optional(),
-  doctorName: z.string().min(3),
-  doctorId: z.string().min(3),
+  hospitalName: z.string().min(3),
+  hospitalId: z.string().min(3),
   clinicAddress: z.string().min(2).optional(),
   startTimestamp: z.string().optional(),
   endTimestamp: z.string().optional(),
 });
 
-type AppointmentFormData =  z.infer<typeof appointmentFormSchema>
-const AppointmentForm = () => {
+type AppointmentFormData = z.infer<typeof appointmentFormSchema>;
 
-  const {data: session} = useSession();
+const AppointmentForm = () => {
+  const { data: session } = useSession();
   const patient = session?.user;
 
-  const router = useRouter()
+  const router = useRouter();
 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [patientData, setPatientData] = useState<Patient>();
-  const [doctorData, setDoctorData] = useState<Doctor>();
+  const [hospitalData, setHospitalData] = useState<Hospital>();
   const [allergies, setAllergies] = useState<string[]>(['']);
   const [medications, setMedications] = useState<string[]>(['']);
   const [diseases, setDiseases] = useState<string[]>(['']);
 
- 
-
   const searchParams = useSearchParams();
-  const doctorId = searchParams.get('doctorId');
+  const hospitalId = searchParams.get('hospitalId');
 
   const { toast } = useToast();
 
@@ -81,188 +78,177 @@ const AppointmentForm = () => {
       patientBodyImage: patientData?.image || '',
       patientPrescriptionImage: '',
       patientDiseases: [],
-      doctorName: doctorData?.name || '',
-      doctorId: doctorId || '',
-      clinicAddress: doctorData?.clinicAddress || '',
+      hospitalName: hospitalData?.name || '',
+      hospitalId: hospitalId || '',
+      clinicAddress: hospitalData?.clinicAddress || '',
       startTimestamp: Date.now().toString(),
       endTimestamp: Date.now().toString(),
     }
   });
 
-
-
-    const fetchPatientDetails = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        setSuccess('');
-    
-        try {
-        if (!patient?._id) {
-            setError('An error occurred while fetching patient data: Patient not found');
-            setLoading(false);
-            return;
-        }
-    
-        const response = await axios.get(`/api/get-patient-by-id?id=${patient?._id}`);
-        const responseJson = response.data;
-    
-        if (response.status !== 200 || response.data.error) {
-            setError('An error occurred while fetching patient data: ' + response.data.error);
-            toast({
-            title: 'Error',
-            description: 'An error ' + response.data.error,
-            variant: 'destructive'
-            });
-            return;
-        }
-    
-        const patientData = responseJson.data;
-    
-        console.log(patientData);
-        setSuccess('Patient data fetched successfully: ' + patientData.name);
-        setPatientData(patientData);
-    
-        // Update form default values with fetched patient data
-        reset({
-            patientName: patientData?.name || '',
-            patientEmail: patientData?.email || '',
-            patientPhoneNumber: patientData?.phoneNumber?.toString() || '',
-            patientAddress: patientData?.address || '',
-            patientImage: patientData?.image || '',
-            patientAge: patientData?.age || 0,
-            patientHeight: patientData?.height || 0,
-            patientWeight: patientData?.weight || 0,
-            patientBloodGroup: patientData?.bloodGroup || '',
-            patientAllergies: patientData?.allergies || [''],
-            patientMedications: patientData?.medications || [''],
-            patientBodyImage: patientData?.image || '',
-            patientPrescriptionImage: '',
-            patientDiseases: patientData?.diseases || [''],
-            doctorName: doctorData?.name || '',
-            doctorId: doctorId || '',
-            clinicAddress: doctorData?.clinicAddress || '',
-            startTimestamp: '',
-            endTimestamp: '',
-        });
-    
-        } catch (error) {
-        setError('An error occurred while fetching patient data: ' + error);
-        toast({
-            title: 'Error',
-            description: 'An error ' + error,
-            variant: 'destructive'
-        });
-        return;
-        } finally {
-        setLoading(false);
-        }
-    }, [patient, toast, reset]);
-    
-
-    const fetchDoctorDetails = useCallback(async () => {
+  const fetchPatientDetails = useCallback(async () => {
     setLoading(true);
     setError(null);
     setSuccess('');
 
     try {
-        if (!doctorId) {
-        setError('An error occurred while fetching doctor data: Doctor not found');
+      if (!patient?._id) {
+        setError('An error occurred while fetching patient data: Patient not found');
         setLoading(false);
+        return;
+      }
+
+      const response = await axios.get(`/api/get-patient-by-id?id=${patient?._id}`);
+      const responseJson = response.data;
+
+      if (response.status !== 200 || response.data.error) {
+        setError('An error occurred while fetching patient data: ' + response.data.error);
         toast({
-            title: 'Error',
-            description: 'An error ' + 'Doctor not found',
-            variant: 'destructive'
+          title: 'Error',
+          description: 'An error ' + response.data.error,
+          variant: 'destructive'
         });
         return;
-        }
+      }
 
-        const response = await axios.get(`/api/get-doctor-by-id?id=${doctorId}`);
-        const responseJson = response.data;
+      const patientData = responseJson.data;
+      setSuccess('Patient data fetched successfully: ' + patientData.name);
+      setPatientData(patientData);
 
-        if (response.status !== 200) {
-        setError('An error occurred while fetching doctor data: ' + responseJson.message);
-        return;
-        }
-
-        const doctorData = responseJson.data;
-
-        toast({
-        title: 'Success',
-        description: 'Doctor data fetched successfully',
-        variant: 'success'
-        });
-
-        console.log(doctorData);
-        setDoctorData(doctorData);
-        setSuccess('Doctor data fetched successfully: ' + doctorData?.name);
-
-        // Update form default values with fetched doctor data
-        reset({
-        doctorName: doctorData?.name || '',
-        doctorId: doctorId || '',
-        clinicAddress: doctorData?.clinicAddress || '',
-        // Include other fields if necessary
-        });
+      // Update form default values with fetched patient data
+      reset({
+        patientName: patientData?.name || '',
+        patientEmail: patientData?.email || '',
+        patientPhoneNumber: patientData?.phoneNumber?.toString() || '',
+        patientAddress: patientData?.address || '',
+        patientImage: patientData?.image || '',
+        patientAge: patientData?.age || 0,
+        patientHeight: patientData?.height || 0,
+        patientWeight: patientData?.weight || 0,
+        patientBloodGroup: patientData?.bloodGroup || '',
+        patientAllergies: patientData?.allergies || [''],
+        patientMedications: patientData?.medications || [''],
+        patientBodyImage: patientData?.image || '',
+        patientPrescriptionImage: '',
+        patientDiseases: patientData?.diseases || [''],
+        hospitalName: hospitalData?.name || '',
+        hospitalId: hospitalId || '',
+        clinicAddress: hospitalData?.clinicAddress || '',
+        startTimestamp: '',
+        endTimestamp: '',
+      });
 
     } catch (error) {
-        setError('An error occurred while fetching doctor data: ' + error);
-        toast({
+      setError('An error occurred while fetching patient data: ' + error);
+      toast({
         title: 'Error',
         description: 'An error ' + error,
         variant: 'destructive'
+      });
+      return;
+    } finally {
+      setLoading(false);
+    }
+  }, [patient, toast, reset]);
+
+  const fetchHospitalDetails = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess('');
+
+    try {
+      if (!hospitalId) {
+        setError('An error occurred while fetching hospital data: Hospital not found');
+        setLoading(false);
+        toast({
+          title: 'Error',
+          description: 'An error ' + 'Hospital not found',
+          variant: 'destructive'
         });
         return;
-    } finally {
-        setLoading(false);
-    }
-    }, [doctorId, reset, toast]);
-
-    useEffect(() => {
-        
-      if(patient?._id) {
-          fetchPatientDetails()
       }
 
-      if(doctorId) {
-          fetchDoctorDetails()
-      } 
+      const response = await axios.get(`/api/get-hospital-by-id?id=${hospitalId}`);
+      const responseJson = response.data;
 
-      }, [session, patient?._id, setPatientData, setDoctorData, doctorId, reset]
-    )
+      if (response.status !== 200) {
+        setError('An error occurred while fetching hospital data: ' + responseJson.message);
+        return;
+      }
 
+      const hospitalData = responseJson.data;
+
+      toast({
+        title: 'Success',
+        description: 'Hospital data fetched successfully',
+        variant: 'success'
+      });
+
+      setHospitalData(hospitalData);
+      setSuccess('Hospital data fetched successfully: ' + hospitalData?.name);
+
+      // Update form default values with fetched hospital data
+      reset({
+        hospitalName: hospitalData?.name || '',
+        hospitalId: hospitalId || '',
+        clinicAddress: hospitalData?.clinicAddress || '',
+        // Include other fields if necessary
+      });
+
+    } catch (error) {
+      setError('An error occurred while fetching hospital data: ' + error);
+      toast({
+        title: 'Error',
+        description: 'An error ' + error,
+        variant: 'destructive'
+      });
+      return;
+    } finally {
+      setLoading(false);
+    }
+  }, [hospitalId, reset, toast]);
+
+  useEffect(() => {
+    if (patient?._id) {
+      fetchPatientDetails();
+    }
+
+    if (hospitalId) {
+      fetchHospitalDetails();
+    }
+
+  }, [session, patient?._id, setPatientData, setHospitalData, hospitalId, reset]);
 
   const onSubmit = async (data: AppointmentFormData) => {
-
     console.log("data: ", data);
 
     toast({
-        title: 'Info',
-        description: 'Creating appointment',
-        variant: 'default'
-    })
-    
+      title: 'Info',
+      description: 'Creating appointment',
+      variant: 'default'
+    });
+
     setLoading(true);
 
     try {
-      
-      if(!patient?._id) {
-        setError('An error occurred while creating appointment: Patient not found')
-        setLoading(false)
+      if (!patient?._id) {
+        setError('An error occurred while creating appointment: Patient not found');
+        setLoading(false);
         toast(
           {
             title: 'Error',
             description: 'An error ' + 'Patient not found',
             variant: 'destructive'
           }
-        )
-        return
+        );
+        return;
       }
 
-      const response = await axios.post(`/api/create-new-appointment?patientId=${patient?._id}&doctorId=${doctorId}`, data);
+      const response = await axios.post(`/api/create-new-appointment?patientId=${patient?._id}&hospitalId=${hospitalId}`, data);
 
       const responseJson = response.data;
 
-      if(response.status !== 201 || responseJson.status !== 201 || responseJson.error) {
+      if (response.status !== 201 || responseJson.status !== 201 || responseJson.error) {
         setError('An error occurred while creating appointment: ' + responseJson.message);
         toast(
           {
@@ -270,240 +256,155 @@ const AppointmentForm = () => {
             description: 'An error ' + responseJson.message,
             variant: 'destructive'
           }
-        )
+        );
         return;
       }
 
-      setSuccess('Appointment created successfully: ' + responseJson.message);
+      setSuccess('Appointment created successfully: ' + responseJson.data?.hospitalName);
+      reset();
 
-      toast(
-        {
-          title: 'Success',
-          description: 'Appointment created successfully',
-          variant: 'success'
-        }
-      )
-
-      const appointmentId = response.data.id;
-
-      if(!appointmentId) {
-        setError('An error occurred while creating appointment: Appointment ID not found');
-        toast(
-          {
-            title: 'Error',
-            description: 'An error ' + 'Appointment ID not found',
-            variant: 'destructive'
-          }
-        )
-        return;
-      }
-
-      router.push(`/appointment-details?id=${appointmentId}`);
-
-      toast({
-        title: 'Info',
-        description: 'Redirecting to appointment details page',
-        variant: 'success'
-      
-      })
     } catch (error) {
-      console.error(error);
-
+      setError('An error occurred while creating appointment: ' + error);
       toast(
         {
           title: 'Error',
           description: 'An error ' + error,
           variant: 'destructive'
         }
-      )
-    } finally { 
+      );
+      return;
+    } finally {
       setLoading(false);
-      toast(
-        {
-          title: 'Info',
-          description: 'Appointment creation process completed',
-          variant: 'default'
-        }
-      )
     }
   };
 
-
-  const addField = (setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => [...prev, '']);
+  const handleRemoveAllergy = (index: number) => {
+    const values = [...allergies];
+    values.splice(index, 1);
+    setAllergies(values);
   };
 
-  const removeField = (index: number, setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    setter(prev => prev.filter((_, i) => i !== index));
+  const handleAddAllergy = () => {
+    setAllergies([...allergies, '']);
+  };
+
+  const handleRemoveMedication = (index: number) => {
+    const values = [...medications];
+    values.splice(index, 1);
+    setMedications(values);
+  };
+
+  const handleAddMedication = () => {
+    setMedications([...medications, '']);
+  };
+
+  const handleRemoveDisease = (index: number) => {
+    const values = [...diseases];
+    values.splice(index, 1);
+    setDiseases(values);
+  };
+
+  const handleAddDisease = () => {
+    setDiseases([...diseases, '']);
   };
 
   return (
-
-    
-    <div className='flex flex-col items-center justify-center p-2 gap-2 '>
-
+    <div className="flex flex-col items-center justify-center p-4 gap-4">
       <FormError message={error?.toString()} />
       <FormSuccess message={success} />
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-2xl">
         <CustomAppInput
-        label="Patient Name"
-        name="patientName"
-        register={register}
-        errors={errors.patientName}
-      />
-      <CustomAppInput
-        label="Patient Email"
-        name="patientEmail"
-        register={register}
-        errors={errors.patientEmail}
-        
-      />
-      <CustomAppInput
-        label="Patient Phone Number"
-        name="patientPhoneNumber"
-        register={register}
-        errors={errors.patientPhoneNumber}
-      />
-      <CustomAppInput
-        label="Patient Address"
-        name="patientAddress"
-        register={register}
-        errors={errors.patientAddress}
-      />
-      {/* Add other fields here similarly */}
-      
-      <div>
-        <label
-        className='font-semibold text-blue-600 font-xl'
-        >Patient Allergies</label>
-        {allergies.map((_, index) => (
-          <div key={index} className='flex gap-4'>
-            <Input 
-            {...register(`patientAllergies.${index}` as const)} 
-            className='border border-gray-300 rounded-md  p-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent max-w-96'
-            />
-            <Button 
-            type="button" 
-            onClick={() => removeField(index, setAllergies)}
-            className=' text-red-500 p-2 rounded-3xl px-6 mt-2 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
-            variant={'outline'}
-            >Remove</Button>
-          </div>
-        ))}
-        <Button 
-        type="button" 
-        onClick={() => addField(setAllergies)}
-        className='bg-blue-500 text-white p-2 rounded-3xl px-6 mt-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent'
-        >Add Allergy</Button>
-      </div>
-
-      <div>
-        <label>Patient Medications</label>
-        {medications.map((_, index) => (
-          <div key={index} className='flex gap-4'>
-            <h1 className='font-semibold text-indigo-600 '>
-                {index + 1}
-            </h1>
-            <Input 
-            {...register(`patientMedications.${index}` as const)} 
-            className='border border-gray-300 rounded-md  p-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent max-w-96'
-            />
-            <Button 
-            type="button" 
-            onClick={() => removeField(index, setMedications)}
-            className=' text-red-500 p-2 rounded-3xl px-6 mt-2 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
-            variant={'outline'}
-            >Remove</Button>
-          </div>
-        ))}
-        <Button 
-        type="button" 
-        onClick={() => addField(setMedications)}
-        className='bg-blue-500 text-white p-2 rounded-3xl px-6 mt-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent'
-        
-        >Add Medication</Button>
-      </div>
-
-      <div className='my-6'>
-        <label>Patient Diseases</label>
-        {diseases.map((_, index) => (
-          <div key={index} className='flex gap-4'>
-            <Input 
-            {...register(`patientDiseases.${index}` as const)}
-            className='border border-gray-300 rounded-md  p-2 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent max-w-96'
-            />
-            <Button 
-            type="button" 
-            onClick={() => removeField(index, setDiseases)}
-            className=' text-red-500 p-2 rounded-3xl px-6 mt-2 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent'
-            variant={'outline'}
-            >Remove</Button>
-          </div>
-        ))}
-        <Button 
-        type="button" 
-        onClick={() => addField(setDiseases)}
-        className='bg-blue-500 text-white p-2 rounded-3xl px-6 mt-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent'
-        >Add Disease</Button>
-      </div>
-
-      <CustomAppInput
-        label="Doctor Name"
-        name="doctorName"
-        register={register}
-        errors={errors.doctorName}
-        disabled={true}
+          label="Patient Name"
+          name="patientName"
+          register={register}
+          errors={errors.patientName}
         />
-
-      <CustomAppInput
-        label="Doctor ID"
-        name="doctorId"
-        register={register}
-        errors={errors.doctorId}
-        disabled={true}
-        />
-
         <CustomAppInput
-        label="Clinic Address"
-        name="clinicAddress"
-        register={register}
-        errors={errors.clinicAddress as FieldError}
-        disabled={false}
+          label="Patient Email"
+          name="patientEmail"
+          register={register}
+          errors={errors.patientEmail}
         />
-
-      <div>
-        <label
-        className='font-semibold text-blue-600 font-xl'
-        >Start Timestamp</label>
-        <Controller
-          name="startTimestamp"
-          control={control}
-          render={({ field }) => <input type="datetime-local" {...field} />}
+        <CustomAppInput
+          label="Patient Phone Number"
+          name="patientPhoneNumber"
+          register={register}
+          errors={errors.patientPhoneNumber}
         />
-        {errors.startTimestamp && <span>{errors.startTimestamp.message}</span>}
-      </div>
-
-      <div>
-        <label
-        className='font-semibold text-blue-600 font-xl'
-        >End Timestamp</label>
-        <Controller
-          name="endTimestamp"
-          control={control}
-          render={({ field }) => <input type="datetime-local" {...field} />}
+        <CustomAppInput
+          label="Patient Address"
+          name="patientAddress"
+          register={register}
+          errors={errors.patientAddress}
         />
-        {errors.endTimestamp && <span>{errors.endTimestamp.message}</span>}
-      </div>
+        <CustomAppInput
+          label="Hospital Name"
+          name="hospitalName"
+          register={register}
+          errors={errors.hospitalName}
+        />
+        <CustomAppInput
+          label="Hospital ID"
+          name="hospitalId"
+          register={register}
+          errors={errors.hospitalId}
+        />
+        <CustomAppInput
+          label="Clinic Address"
+          name="clinicAddress"
+          register={register}
+          errors={errors.clinicAddress}
+        />
+        {/* Additional fields for timestamp, etc. */}
 
-      <Button 
-      type="submit"
-      className='bg-blue-500 text-white p-2 rounded-3xl px-9 mt-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent m-6'
-      >Book Appointment</Button>
-        </form>
+        {/* Dynamic fields for allergies, medications, and diseases */}
+        <div>
+          <label className="font-semibold text-blue-600">Patient Allergies</label>
+          {allergies.map((_, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <Input
+                {...register(`patientAllergies.${index}`)}
+                placeholder={`Allergy #${index + 1}`}
+              />
+              <Button type="button" onClick={() => handleRemoveAllergy(index)}>Remove</Button>
+            </div>
+          ))}
+          <Button type="button" onClick={handleAddAllergy}>Add Allergy</Button>
+        </div>
+
+        <div>
+          <label className="font-semibold text-blue-600">Patient Medications</label>
+          {medications.map((_, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <Input
+                {...register(`patientMedications.${index}`)}
+                placeholder={`Medication #${index + 1}`}
+              />
+              <Button type="button" onClick={() => handleRemoveMedication(index)}>Remove</Button>
+            </div>
+          ))}
+          <Button type="button" onClick={handleAddMedication}>Add Medication</Button>
+        </div>
+
+        <div>
+          <label className="font-semibold text-blue-600">Patient Diseases</label>
+          {diseases.map((_, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <Input
+                {...register(`patientDiseases.${index}`)}
+                placeholder={`Disease #${index + 1}`}
+              />
+              <Button type="button" onClick={() => handleRemoveDisease(index)}>Remove</Button>
+            </div>
+          ))}
+          <Button type="button" onClick={handleAddDisease}>Add Disease</Button>
+        </div>
+
+        {/* Submit button */}
+        <Button type="submit" className="w-full mt-4 text-blue-500 hover:">Submit Appointment</Button>
+      </form>
     </div>
-
   );
 };
 
