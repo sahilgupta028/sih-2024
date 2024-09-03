@@ -1,67 +1,39 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Select from 'react-select';
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/FormError';
 import { FormSuccess } from '@/components/FormSuccess';
 import axios from 'axios';
 
-interface DoctorSignupFormData {
+interface HospitalSignupFormData {
   name: string;
   email: string;
   phone: string;
-  department: string;
-  experience: string;
-  hospitalAddress: string;
-  consultationFee: string;
-  availability: string;
-  qualifications: string;
+  address: string;
+  registrationNumber: string;
+  numberOfBeds: string;
+  specializations: string;
+  facilities: string;
   bio: string;
   password: string;
-  latitude: string;
-  longitude: string;
 }
 
-const DoctorSignup: React.FC = () => {
+const HospitalSignup: React.FC = () => {
   const router = useRouter();
 
-  const [formData, setFormData] = useState<DoctorSignupFormData>({
+  const [formData, setFormData] = useState<HospitalSignupFormData>({
     name: '',
     email: '',
     phone: '',
-    department: '',
-    experience: '',
-    hospitalAddress: '',
-    consultationFee: '',
-    availability: '',
-    qualifications: '',
+    address: '',
+    registrationNumber: '',
+    numberOfBeds: '',
+    specializations: '',
+    facilities: '',
     bio: '',
-    password: '',
-    latitude: '',
-    longitude: ''
+    password: ''
   });
-
-  const departments = [
-    { value: 'Cardiology', label: 'Cardiology' },
-    { value: 'Dermatology', label: 'Dermatology' },
-    { value: 'Neurology', label: 'Neurology' },
-    { value: 'Orthopedics', label: 'Orthopedics' },
-    { value: 'Pediatrics', label: 'Pediatrics' },
-    { value: 'Psychiatry', label: 'Psychiatry' },
-    { value: 'Surgery', label: 'Surgery' },
-    { value: 'General Medicine', label: 'General Medicine' },
-    { value: 'Allergy and Immunology', label: 'Allergy and Immunology' },
-    { value: 'Anesthesiology', label: 'Anesthesiology' },
-    { value: 'Emergency Medicine', label: 'Emergency Medicine' },
-    { value: 'Endocrinology', label: 'Endocrinology' },
-    { value: 'Gastroenterology', label: 'Gastroenterology' },
-    { value: 'Geriatrics', label: 'Geriatrics' },
-    { value: 'Hematology', label: 'Hematology' },
-    { value: 'Infectious Disease', label: 'Infectious Disease' },
-    { value: 'Internal Medicine', label: 'Internal Medicine' },
-    { value: 'Nephrology', label: 'Nephrology' }
-  ];
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,52 +43,6 @@ const DoctorSignup: React.FC = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
-  const handleDepartmentChange = (selectedOption: any) => {
-    setFormData({ ...formData, department: selectedOption.value });
-  };
-
-  const getCoordinates = async (address: string) => {
-    const options = {
-      method: 'POST',
-      url: 'https://google-api31.p.rapidapi.com/map',
-      headers: {
-        'content-type': 'application/json',
-        'X-RapidAPI-Key': 'a74f98ca07msh13a3e05599ca2aep1dbfd2jsnd0b1eab05732',
-        'X-RapidAPI-Host': 'google-api31.p.rapidapi.com'
-      },
-      data: {
-        text: address,
-        street: '',
-        city: '',
-        country: '',
-        state: '',
-        postalcode: '',
-        latitude: '',
-        longitude: '',
-        radius: ''
-      }
-    };
-
-    try {
-      const response = await axios.request(options);
-      console.log(response);
-      if (response.status === 200) {
-        const location = response.data.result[0];
-        console.log(location);
-        return {
-          latitude: location.latitude.toString(),
-          longitude: location.longitude.toString()
-        };
-      } else {
-        throw new Error('Failed to get coordinates');
-      }
-    } catch (error) {
-      console.error(error);
-      throw new Error('Failed to get coordinates');
-    }
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -124,16 +50,11 @@ const DoctorSignup: React.FC = () => {
     setSuccess('');
 
     try {
-      const { latitude, longitude } = await getCoordinates(formData.hospitalAddress);
-      console.log(latitude);
-      console.log(longitude);
       const updatedFormData = {
         ...formData,
-        latitude,
-        longitude
       };
 
-      const response = await fetch('/api/doctor/sign-up', {
+      const response = await fetch('/api/hospital/sign-up', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -144,7 +65,7 @@ const DoctorSignup: React.FC = () => {
       console.log(updatedFormData);
 
       if (response.ok) {
-        setSuccess('Doctor signed up successfully');
+        setSuccess('Hospital signed up successfully');
       } else {
         setError('Failed to sign up');
       }
@@ -169,13 +90,13 @@ const DoctorSignup: React.FC = () => {
       )}
 
       <div className="min-h-screen bg-blue-100 flex">
-        <div className="hidden md:block md:w-1/2 bg-cover rounded-l-2xl" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1581056771107-24ca5f033842?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")' }}></div>
+        <div className="hidden md:block md:w-1/2 bg-cover rounded-l-2xl" style={{ backgroundImage: 'url("https://plus.unsplash.com/premium_photo-1664304370934-b21ea9e0b1f5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGhvc3BpdGFsfGVufDB8fDB8fHww")' }}></div>
         <div className="flex flex-col justify-center md:w-1/2 p-8 bg-white">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">Doctor Signup</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">Hospital Signup</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col md:flex-row md:space-x-4">
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <label className="block text-sm font-medium text-gray-700">Hospital Name</label>
                 <input
                   type="text"
                   name="name"
@@ -183,7 +104,7 @@ const DoctorSignup: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Full Name"
+                  placeholder="Hospital Name"
                 />
               </div>
               <div className="w-full">
@@ -212,40 +133,12 @@ const DoctorSignup: React.FC = () => {
                   placeholder="Phone Number"
                 />
               </div>
-              <div className='w-full'>
-                <label htmlFor="department" className="block text-sm font-medium text-gray-700">
-                  Department
-                </label>
-                <Select
-                  id="department"
-                  name="department"
-                  options={departments}
-                  placeholder="Department"
-                  value={departments.find(department => department.value === formData.department) || null}
-                  onChange={handleDepartmentChange}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row md:space-x-4">
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Experience</label>
+                <label className="block text-sm font-medium text-gray-700">Address</label>
                 <input
                   type="text"
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleChange}
-                  required
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Experience"
-                />
-              </div>
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Hospital Address</label>
-                <input
-                  type="text"
-                  name="hospitalAddress"
-                  value={formData.hospitalAddress}
+                  name="address"
+                  value={formData.address}
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
@@ -255,43 +148,57 @@ const DoctorSignup: React.FC = () => {
             </div>
             <div className="flex flex-col md:flex-row md:space-x-4">
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Consultation Fee</label>
+                <label className="block text-sm font-medium text-gray-700">Registration Number</label>
                 <input
                   type="text"
-                  name="consultationFee"
-                  value={formData.consultationFee}
+                  name="registrationNumber"
+                  value={formData.registrationNumber}
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Consultation Fee"
+                  placeholder="Registration Number"
                 />
               </div>
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Availability</label>
+                <label className="block text-sm font-medium text-gray-700">Number of Beds</label>
                 <input
                   type="text"
-                  name="availability"
-                  value={formData.availability}
+                  name="numberOfBeds"
+                  value={formData.numberOfBeds}
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Availability"
+                  placeholder="Number of Beds"
                 />
               </div>
             </div>
             <div className="flex flex-col md:flex-row md:space-x-4">
               <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700">Qualifications</label>
+                <label className="block text-sm font-medium text-gray-700">Specializations</label>
                 <input
                   type="text"
-                  name="qualifications"
-                  value={formData.qualifications}
+                  name="specializations"
+                  value={formData.specializations}
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Qualifications"
+                  placeholder="Specializations (comma separated)"
                 />
               </div>
+              {/* <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700">Facilities</label>
+                <textarea
+                  name="facilities"
+                  value={formData.facilities}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                  placeholder="Facilities (comma separated)"
+                  rows={3}
+                />
+              </div> */}
+            </div>
+            <div className="flex flex-col md:flex-row md:space-x-4">
               <div className="w-full">
                 <label className="block text-sm font-medium text-gray-700">Bio</label>
                 <textarea
@@ -300,34 +207,32 @@ const DoctorSignup: React.FC = () => {
                   onChange={handleChange}
                   required
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                  placeholder="Bio"
+                  placeholder="Short description about the hospital"
                   rows={4}
                 />
               </div>
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                  placeholder="Password"
+                />
+              </div>
             </div>
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
-                placeholder="Password"
-              />
-            </div>
-            <div className="pt-5">
-              <div className="flex justify-center">
+            <div className="flex justify-center">
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full md:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-3xl shadow-sm hover:bg-blue-700"
+                  className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700"
                 >
                   Sign Up
                 </Button>
               </div>
-            </div>
           </form>
         </div>
       </div>
@@ -335,4 +240,4 @@ const DoctorSignup: React.FC = () => {
   );
 };
 
-export default DoctorSignup;
+export default HospitalSignup;

@@ -90,7 +90,7 @@ const HospitalSignup: React.FC = () => {
       )}
 
       <div className="min-h-screen bg-blue-100 flex">
-        <div className="hidden md:block md:w-1/2 bg-cover rounded-l-2xl" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1581056771107-24ca5f033842?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")' }}></div>
+        <div className="hidden md:block md:w-1/2 bg-cover rounded-l-2xl" style={{ backgroundImage: 'url("https://plus.unsplash.com/premium_photo-1664304370934-b21ea9e0b1f5?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGhvc3BpdGFsfGVufDB8fDB8fHww")' }}></div>
         <div className="flex flex-col justify-center md:w-1/2 p-8 bg-white">
           <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">Hospital Signup</h2>
           <form onSubmit={handleSubmit} className="space-y-6">

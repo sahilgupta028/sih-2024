@@ -1,226 +1,203 @@
 "use client";
-import React, { useState, useEffect, ChangeEvent } from 'react';
-import axios from 'axios';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import axios from 'axios';
 
-interface DoctorProfile {
+interface HospitalDetails {
   name: string;
   email: string;
-  phoneNumber: string;
-  department: string;
-  experience: number;
-  clinicAddress: string;
-  consultationFee: number;
-  availability: string;
-  qualification: string;
+  phone: string;
+  address: string;
+  registrationNumber: string;
+  numberOfBeds: string;
+  specializations: string;
   bio: string;
 }
 
-export default function EditProfile() {
-  const [profile, setProfile] = useState<DoctorProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+const UpdateHospitalDetails: React.FC = () => {
   const router = useRouter();
-
-  const { searchParams } = new URL(window.location.href);
-  const id = searchParams.get('id');
+  const [formData, setFormData] = useState<HospitalDetails>({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    registrationNumber: '',
+    numberOfBeds: '',
+    specializations: '',
+    bio: '',
+  });
+  const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch the original profile data
-    const fetchProfile = async () => {
+    // Fetch the existing hospital details to populate the form
+    const fetchHospitalDetails = async () => {
       try {
-        const response = await axios.get(`/api/doctor/get-doctor-details?id=${id}`); // Replace with actual API endpoint
-        setProfile(response.data.doctor);
-        console.log(response.data.doctor);
+        const response = await axios.get('/api/hospital/details');
+        setFormData(response.data);
       } catch (error) {
-        console.error('Error fetching profile data:', error);
+        console.error('Error fetching hospital details:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchHospitalDetails();
   }, []);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    if (profile) {
-      setProfile({ ...profile, [e.target.name]: e.target.value });
-    }
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsUpdating(true);
-
-    console.log(profile);
+    setLoading(true);
+    setError('');
+    setSuccess('');
 
     try {
-      await axios.post(`/api/doctor/update-doctor-details?id=${id}`, profile);
-      alert('Profile updated successfully!');
-      router.push('/profile'); // Redirect to profile page
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
+      await axios.put('/api/hospital/details/update', formData);
+      setSuccess('Hospital details updated successfully');
+    } catch (error: any) {
+      setError('Failed to update hospital details: ' + error.toString());
     } finally {
-      setIsUpdating(false);
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!profile) {
-    return <div>Failed to load profile data.</div>;
-  }
-
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col justify-center items-center">
-      <div className="w-full max-w-screen-md bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-blue-500 mb-4">Edit Profile</h1>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={profile.name}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Update Hospital Details</h2>
+
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        {success && <div className="text-green-500 mb-4">{success}</div>}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex flex-col md:flex-row md:space-x-4">
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Hospital Name</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Hospital Name"
+              />
+            </div>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Email Address"
+              />
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={profile.email}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
+
+          <div className="flex flex-col md:flex-row md:space-x-4">
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Phone Number"
+              />
+            </div>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Address</label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Hospital Address"
+              />
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Phone Number</label>
-            <input
-              type="text"
-              name="phoneNumber"
-              value={profile.phoneNumber}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
+
+          <div className="flex flex-col md:flex-row md:space-x-4">
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Registration Number</label>
+              <input
+                type="text"
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Registration Number"
+              />
+            </div>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Number of Beds</label>
+              <input
+                type="text"
+                name="numberOfBeds"
+                value={formData.numberOfBeds}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Number of Beds"
+              />
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Department</label>
-            <select
-              name="department"
-              value={profile.department}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            >
-              <option value="Cardiology">Cardiology</option>
-              <option value="Neurology">Neurology</option>
-              <option value="Pediatrics">Pediatrics</option>
-              <option value="Dermatology">Dermatology</option>
-              <option value="Rheumatology">Rheumatology</option>
-              <option value="Obstetrics and Gynecology">Obstetrics and Gynecology</option>
-              <option value="Pulmonology">Pulmonology</option>
-              <option value="Gastroenterology">Gastroenterology</option>
-              <option value="Psychiatry">Psychiatry</option>
-              <option value="Ophthalmology">Ophthalmology</option>
-              <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
-              <option value="Urology">Urology</option>
-              <option value="Orthopedics">Orthopedics</option>
-              <option value="Hematology">Hematology</option>
-              <option value="Oncology">Oncology</option>
-              <option value="Endocrinology">Endocrinology</option>
-              <option value="Infectious Disease">Infectious Disease</option>
-              <option value="General">General</option>
-            </select>
+
+          <div className="flex flex-col md:flex-row md:space-x-4">
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Specializations</label>
+              <input
+                type="text"
+                name="specializations"
+                value={formData.specializations}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Specializations (comma separated)"
+              />
+            </div>
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700">Bio</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-900"
+                placeholder="Short description about the hospital"
+                rows={4}
+              />
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Experience (years)</label>
-            <input
-              type="number"
-              name="experience"
-              value={profile.experience}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Clinic Address</label>
-            <input
-              type="text"
-              name="clinicAddress"
-              value={profile.clinicAddress}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Consultation Fee</label>
-            <input
-              type="number"
-              name="consultationFee"
-              value={profile.consultationFee}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Availability</label>
-            <input
-              type="text"
-              name="availability"
-              value={profile.availability}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Qualification</label>
-            <input
-              type="text"
-              name="qualification"
-              value={profile.qualification}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Bio</label>
-            <textarea
-              name="bio"
-              value={profile.bio}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              rows={4}
-              required
-            />
-          </div>
-          <div className="flex justify-end">
-            <button
+
+          <div className="flex justify-center">
+            <Button
               type="submit"
-              className={`bg-blue-500 text-white p-2 rounded ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isUpdating}
+              disabled={loading}
+              className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow-sm hover:bg-blue-700"
             >
-              {isUpdating ? 'Updating...' : 'Update Profile'}
-            </button>
+              Update Details
+            </Button>
           </div>
         </form>
       </div>
     </div>
   );
-}
+};
 
-
-
+export default UpdateHospitalDetails;
