@@ -6,7 +6,6 @@ import { Appointment } from "./utils/Appointment";
 export interface Patient extends Document{
     name?: string;
     email: string;
-    password: string;
     phoneNumber?: number;
     age?: number;
     diseases?: string[];
