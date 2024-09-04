@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import Footer from '@/components/Footer';
 import { Inter } from 'next/font/google';
+import Navbar from '@/components/navbar';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,7 +16,7 @@ export default function RootLayout({
   }>) {
     return (
       <div>
-
+          <Navbar />
           {children}
           <Footer />
       </div>

@@ -25,7 +25,6 @@ const PatientSchema = new Schema<Patient>(
     {
         name: { type: String, required: false },
         email: { type: String, required: true },
-        password: { type: String, required: true },
         phoneNumber: { type: String, required: false },
         age: { type: Number, required: false },
         diseases: { type: String, required: false },
